@@ -17,6 +17,7 @@ setup(name='unitx',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
       zip_safe=False,
+      test_suite='unitx.test',
       install_requires=[
           # -*- Extra requirements: -*-
         'pyyaml',

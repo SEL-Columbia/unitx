@@ -49,20 +49,26 @@ class UnitxConsumerTestMessage(unittest.TestCase):
         """
         """
 
-    def test_balance_english(self):
+    def test_balance(self):
         msg = run_main('body=bal.1234')
         self.assertEqual(
             msg['classification']['name'], 'consummer-message-alphabetical')
+        self.assertEqual(
+            msg['route']['name'], 'check_circuit_balance')
 
     def test_balance_numeric(self):
         msg = run_main('body=2.1234')
         self.assertEqual(
             msg['classification']['name'], 'consumer-message-numeric')
+        self.assertEqual(
+            msg['route']['name'], 'check_circuit_balance')
 
     def test_balance_french(self):
         msg = run_main('body=solde.1234')
         self.assertEqual(
             msg['classification']['name'], 'consummer-message-alphabetical')
+        self.assertEqual(msg['route']['name'],
+                         'check_circuit_balance')
 
 
 class UnitxMeterMessagesTest(unittest.TestCase):
@@ -72,10 +78,3 @@ class UnitxMeterMessagesTest(unittest.TestCase):
     def setUP(self):
         """
         """
-
-    def test_primary_log_message(self):
-        pp = """
-        (job=pp&cid=1&mid=meter&wh=10.00&
-        tu=12.12&ts=20110107192318&cr=20.10&status=1)
-        """
-        print pp

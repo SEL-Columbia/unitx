@@ -29,9 +29,9 @@ config = load_config('config.yaml')
 
 def log_function(f):
     def wrap(*args):
-        log.info('Calling %s with --> %s' % (f.__name__, args[0]))
+        #log.info('Calling %s with --> %s' % (f.__name__, args[0]))
         results = apply(f, args)
-        log.info('Returning %s with--> %s' % (f.__name__, results))
+        #log.info('Returning %s with--> %s' % (f.__name__, results))
         return results
     return wrap
 
@@ -61,6 +61,11 @@ def final_parse(message):
 
 @log_function
 def route_message(message):
+    for route in config['routes']:
+        for match in route['matchers']:
+            if re.match(match, message.get('body')):
+                message['route'] = route
+                return message
     return message
 
 
@@ -69,5 +74,4 @@ def run_main(message):
     """
     assert len(message) is not 0
     assert isinstance(message, str)
-    log.info('------------------------------')
-    return final_parse(classify(initial_parse(message)))
+    return route_message(final_parse(classify(initial_parse(message))))

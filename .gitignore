@@ -11,3 +11,5 @@
 /unitx.egg-info/top_level.txt
 /unitx.log
 /unitx/__init__.pyc
+/.coverage
+/unitx/test.pyc

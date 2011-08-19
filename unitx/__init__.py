@@ -1,7 +1,7 @@
 """
 
 """
-
+import re
 from logging import getLogger
 from logging import Formatter
 from logging import StreamHandler
@@ -9,7 +9,7 @@ from logging import DEBUG
 from urlparse import parse_qs
 import argparse
 
-from yaml import load, dump
+from yaml import load
 
 log = getLogger('unitx.main')
 log.setLevel(DEBUG)
@@ -20,94 +20,52 @@ handler.setFormatter(formatter)
 
 log.addHandler(handler)
 
-commands = []
 
-def wrap_message_reducer(message):
-    """
-    Function to reduce the values of a dict to one value instead of a
-    list.
-    """
-    log.info('Starting message reducing --> %s' % message)
+def load_config(file_path):
+    return load(open(file_path))
+
+config = load_config('config.yaml')
+
+
+def log_function(f):
+    def wrap(*args):
+        #log.info('Calling %s with --> %s' % (f.__name__, args[0]))
+        results = f(*args)
+        #log.info('Returning %s with--> %s' % (f.__name__, results))
+        return results
+    return wrap
+
+
+@log_function
+def initial_parse(raw_message):
     c = {}
-    for key, value in message.iteritems():
+    for key, value in parse_qs(raw_message).iteritems():
         c[key] = value[0]
-    log.info('Reduced message --> %s' % c)
     return c
 
-def wrap_message_parser(message):
-    """
-    Function that takes a message and tries to parse its body key.
 
-    Possible parse options.
-      1. Meter message
-         (job=pp&....)
-         (pcu#) 
-      2. Consumer messages
-         9.1234.1234
-         bal.1123
-
+@log_function
+def classify(message):
     """
-    body = message.get('body')
-    if body is not None:
-        if body.startswith('('):
-            log.info('Meter message found')
+    """
+    for classifer in config['classifers']:
+        if re.match(classifer['classifer'], message['body']):
+            print 'stuff'
+            message['classification'] = classifer['name']
             return message
-        elif isinstance(body[0], str) or isinstance(body[0], int):
-            log.info('Consumer message found')
-            message['payload'] = body.split('.')
-            log.info('Message payload --> %s ' % message)
-            return message
-    else:
-        log.debug('Message %s has no body key' % message)
-        return message
-
-
-def wrap_message_command(message):
-    """
-    Takes a message and matches it to a list of global commands
-    """
-    message['command'] = 'test'
     return message
 
 
-def wrap_router(message, config):
+def run_main(message):
     """
     """
-    log.info('Loading router config --> %s' % config)
-    message['configuration'] = load(open(config))
-    return message
-
-
-
-def invoke_router(command):
-    """
-    Takes a command a command is a message_dict excep it has a command
-    key which is a function to be called.
-    """
-    log.info('Running --> %s' % command)
-
-
-def run(message, config):
-    assert type(message) == str
-    message = wrap_message_command(
-        wrap_router(
-            wrap_message_parser(
-                wrap_message_reducer(parse_qs(message))),
-            config
-            )
-        )
-        
-    invoke_router(message)
+    return classify(initial_parse(message))
 
 
 def run_command_line():
     parser = argparse.ArgumentParser(
         description='Process SharedSolar Messages')
     parser.add_argument('message', type=str, help='Give me your message!!')
-    parser.add_argument('config', type=str, help='Router config file')
     args = parser.parse_args()
-    log.info('==================================================')
     log.info('Got raw message -->  %s' % args.message)
-    run(args.message, args.config)
-
-
+    run_main(args.message)

@@ -1,0 +1,20 @@
+# This is a 
+#
+
+classifers:
+  - name: consumer-message-numeric
+    classifer: ^[0-9]
+    
+  - name: consummer-message-alphabetical
+    classifer: ^[A-Za-z]
+
+  - name: meter-message-uncompressed
+    classifer: ^\(.*\)$
+    
+  - name: meter-message-compressed
+    classifer: ^\(l.*\)$
+
+routes:
+  - name: add_credit
+    matcher: 
+    

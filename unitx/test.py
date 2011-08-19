@@ -1,8 +1,11 @@
 import unittest
+from unitx import run_main
 
 
 class UnitxTests(unittest.TestCase):
-
+    """
+    Tests for core functions of unitx
+    """
     def setUp(self):
         """
         """
@@ -30,5 +33,49 @@ class UnitxTests(unittest.TestCase):
         """
         from unitx import classify
         cm = classify(self.get_parsed())
-        self.assertEqual(cm['classification'],
+        self.assertEqual(cm['classification']['name'],
                          'consummer-message-alphabetical')
+
+    def test_run_main(self):
+        msg = run_main(self.get_raw_message())
+        self.assertIsInstance(msg, dict)
+
+
+class UnitxConsumerTestMessage(unittest.TestCase):
+    """
+    Lets test all of the messages we have
+    """
+    def setUp(self):
+        """
+        """
+
+    def test_balance_english(self):
+        msg = run_main('body=bal.1234')
+        self.assertEqual(
+            msg['classification']['name'], 'consummer-message-alphabetical')
+
+    def test_balance_numeric(self):
+        msg = run_main('body=2.1234')
+        self.assertEqual(
+            msg['classification']['name'], 'consumer-message-numeric')
+
+    def test_balance_french(self):
+        msg = run_main('body=solde.1234')
+        self.assertEqual(
+            msg['classification']['name'], 'consummer-message-alphabetical')
+
+
+class UnitxMeterMessagesTest(unittest.TestCase):
+    """
+    Tests for meter messages
+    """
+    def setUP(self):
+        """
+        """
+
+    def test_primary_log_message(self):
+        pp = """
+        (job=pp&cid=1&mid=meter&wh=10.00&
+        tu=12.12&ts=20110107192318&cr=20.10&status=1)
+        """
+        print pp

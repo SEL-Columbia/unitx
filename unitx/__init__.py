@@ -7,9 +7,9 @@ from logging import Formatter
 from logging import StreamHandler
 from logging import DEBUG
 from urlparse import parse_qs
-import argparse
 
 from yaml import load
+from unitx import parsers
 
 log = getLogger('unitx.main')
 log.setLevel(DEBUG)
@@ -29,9 +29,9 @@ config = load_config('config.yaml')
 
 def log_function(f):
     def wrap(*args):
-        #log.info('Calling %s with --> %s' % (f.__name__, args[0]))
-        results = f(*args)
-        #log.info('Returning %s with--> %s' % (f.__name__, results))
+        log.info('Calling %s with --> %s' % (f.__name__, args[0]))
+        results = apply(f, args)
+        log.info('Returning %s with--> %s' % (f.__name__, results))
         return results
     return wrap
 
@@ -46,26 +46,28 @@ def initial_parse(raw_message):
 
 @log_function
 def classify(message):
-    """
-    """
     for classifer in config['classifers']:
         if re.match(classifer['classifer'], message['body']):
-            print 'stuff'
-            message['classification'] = classifer['name']
+            message['classification'] = classifer
             return message
+    return message
+
+
+@log_function
+def final_parse(message):
+    parse_func = getattr(parsers, message['classification']['parser'])
+    return parse_func(message)
+
+
+@log_function
+def route_message(message):
     return message
 
 
 def run_main(message):
     """
     """
-    return classify(initial_parse(message))
-
-
-def run_command_line():
-    parser = argparse.ArgumentParser(
-        description='Process SharedSolar Messages')
-    parser.add_argument('message', type=str, help='Give me your message!!')
-    args = parser.parse_args()
-    log.info('Got raw message -->  %s' % args.message)
-    run_main(args.message)
+    assert len(message) is not 0
+    assert isinstance(message, str)
+    log.info('------------------------------')
+    return final_parse(classify(initial_parse(message)))
